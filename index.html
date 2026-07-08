@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <title>Экспорт в Obsidian Canvas</title>
     <style>
-        /* Базовые стили страницы */
         body { 
             margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            background: #1a1a1a; /* Глубокий темно-серый фон */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #1a1a1a; 
             color: #ededed; 
             overflow: hidden; 
         }
         
-        /* Верхняя панель управления */
         #controls { 
             padding: 12px 20px; 
             background: #242424; 
@@ -26,7 +24,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         
-        /* Поле ввода */
         input { 
             padding: 8px 12px; 
             background: #1a1a1a; 
@@ -36,12 +33,8 @@
             font-size: 14px;
             width: 250px;
         }
-        input:focus {
-            border-color: #666666;
-            outline: none;
-        }
+        input:focus { border-color: #666666; outline: none; }
         
-        /* Кнопки */
         button { 
             padding: 8px 16px; 
             background: #333333; 
@@ -51,40 +44,27 @@
             cursor: pointer; 
             font-weight: 500;
             font-size: 14px;
-            transition: all 0.2s ease;
         }
-        button:hover { 
-            background: #444444; 
-            border-color: #666666;
-        }
-        #btn-save {
-            background: #2e2e2e;
-            border-color: #555555;
-        }
-        #btn-save:hover {
-            background: #3a3a3a;
-            border-color: #777777;
-        }
+        button:hover { background: #444444; border-color: #666666; }
+        #btn-save { background: #2e2e2e; border-color: #555555; }
+        #btn-save:hover { background: #3a3a3a; border-color: #777777; }
         
-        /* Рабочая область с контрастной сеткой */
         #canvas-area { 
             width: 100vw; 
             height: calc(100vh - 68px); 
             position: relative; 
             background-color: #1a1a1a;
-            /* Контрастная серая сетка для ориентации в пространстве */
             background-image: 
                 linear-gradient(to right, #262626 1px, transparent 1px),
                 linear-gradient(to bottom, #262626 1px, transparent 1px);
             background-size: 20px 20px;
         }
         
-        /* Карточки (Контрастный средне-серый цвет) */
         .node { 
             position: absolute; 
             padding: 16px; 
-            background: #2e2e2e; /* Четко выделяется на фоне #1a1a1a */
-            border: 2px solid #555555; /* Контрастная рамка */
+            background: #2e2e2e; 
+            border: 2px solid #555555; 
             border-radius: 6px; 
             color: #ffffff;
             width: 250px; 
@@ -96,18 +76,15 @@
             font-size: 14px;
             line-height: 1.4;
             user-select: none;
+            will-change: left, top; /* Оптимизация плавности */
         }
-        /* Подсветка карточки при наведении */
-        .node:hover {
-            border-color: #888888;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-        }
+        .node:hover { border-color: #888888; }
     </style>
 </head>
 <body>
 
     <div id="controls">
-        <input type="text" id="node-text" placeholder="Текст заметки..." value="Контрастная мысль">
+        <input type="text" id="node-text" placeholder="Текст заметки..." value="Свободная мысль">
         <button onclick="addNode()">Добавить карточку</button>
         <button id="btn-save" onclick="exportToObsidian()">Сохранить в .canvas</button>
     </div>
@@ -126,7 +103,7 @@
             const areaWidth = canvasArea.clientWidth;
             const areaHeight = canvasArea.clientHeight;
             
-            // Появление по центру со смещением для новых карточек
+            // Начальное появление карточек по центру
             const centerX = (areaWidth / 2) - 125 + ((canvasData.nodes.length % 5) * 25);
             const centerY = (areaHeight / 2) - 50 + ((canvasData.nodes.length % 5) * 25);
 
@@ -152,36 +129,45 @@
             div.style.left = nodeData.x + 'px';
             div.style.top = nodeData.y + 'px';
 
-            div.onmousedown = function(e) {
-                e.preventDefault();
-                // Визуально выделяем перетаскиваемую карточку
-                div.style.borderColor = '#ffffff';
+            div.addEventListener('mousedown', function(e) {
+                // Игнорируем клики не левой кнопкой мыши
+                if (e.button !== 0) return; 
                 
+                e.preventDefault();
+                div.style.borderColor = '#ffffff';
+                div.style.zIndex = 1000; // Поднимаем активную карточку наверх
+
                 let rect = canvasArea.getBoundingClientRect();
+                // Рассчитываем сдвиг курсора относительно левого верхнего угла карточки
                 let shiftX = e.clientX - div.getBoundingClientRect().left;
                 let shiftY = e.clientY - div.getBoundingClientRect().top;
 
-                function moveAt(clientX, clientY) {
-                    let newX = clientX - rect.left - shiftX;
-                    let newY = clientY - rect.top - shiftY;
+                function onMouseMove(e) {
+                    // Вычисляем новые координаты относительно рабочей зоны
+                    let newX = e.clientX - rect.left - shiftX;
+                    let newY = e.clientY - rect.top - shiftY;
                     
+                    // Применяем позицию без каких-либо ограничений
                     div.style.left = newX + 'px';
                     div.style.top = newY + 'px';
                     
+                    // Сохраняем точные данные для Obsidian
                     nodeData.x = Math.round(newX);
                     nodeData.y = Math.round(newY);
                 }
 
-                function onMouseMove(e) { moveAt(e.clientX, e.clientY); }
-                document.addEventListener('mousemove', onMouseMove);
+                // Слушаем движение по ВСЕМУ экрану, чтобы карточка не «отрывалась»
+                window.addEventListener('mousemove', onMouseMove);
                 
-                document.onmouseup = function() {
-                    document.removeEventListener('mousemove', onMouseMove);
-                    // Возвращаем стандартную рамку после переноса
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
                     div.style.borderColor = '#555555';
-                    document.onmouseup = null;
-                };
-            };
+                    div.style.zIndex = ''; // Возвращаем стандартный слой
+                }
+                
+                window.addEventListener('mouseup', onMouseUp);
+            });
 
             div.ondragstart = function() { return false; };
             canvasArea.appendChild(div);
@@ -197,7 +183,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = "gray-research.canvas";
+            link.download = "free-research.canvas";
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
