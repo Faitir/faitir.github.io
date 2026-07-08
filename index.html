@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Экспорт в Obsidian Canvas</title>
     <style>
         body { 
@@ -10,6 +11,8 @@
             background: #1a1a1a; 
             color: #ededed; 
             overflow: hidden; 
+            /* Отключаем стандартные жесты браузера на мобильных, чтобы страница не дергалась */
+            touch-action: none; 
         }
         
         #controls { 
@@ -22,6 +25,7 @@
             z-index: 10; 
             position: relative; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            flex-wrap: wrap; /* Корректно переносится на узких экранах телефонов */
         }
         
         input { 
@@ -31,7 +35,8 @@
             border: 2px solid #444444; 
             border-radius: 4px; 
             font-size: 14px;
-            width: 250px;
+            width: 200px;
+            flex-grow: 1;
         }
         input:focus { border-color: #666666; outline: none; }
         
@@ -44,6 +49,7 @@
             cursor: pointer; 
             font-weight: 500;
             font-size: 14px;
+            white-space: nowrap;
         }
         button:hover { background: #444444; border-color: #666666; }
         #btn-save { background: #2e2e2e; border-color: #555555; }
@@ -76,7 +82,11 @@
             font-size: 14px;
             line-height: 1.4;
             user-select: none;
-            will-change: left, top; /* Оптимизация плавности */
+            /* Отключаем выделение текста и вызов меню при долгом нажатии на смартфонах */
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none; 
+            will-change: left, top;
         }
         .node:hover { border-color: #888888; }
     </style>
@@ -84,7 +94,7 @@
 <body>
 
     <div id="controls">
-        <input type="text" id="node-text" placeholder="Текст заметки..." value="Свободная мысль">
+        <input type="text" id="node-text" placeholder="Текст заметки..." value="Универсальная мысль">
         <button onclick="addNode()">Добавить карточку</button>
         <button id="btn-save" onclick="exportToObsidian()">Сохранить в .canvas</button>
     </div>
@@ -103,7 +113,6 @@
             const areaWidth = canvasArea.clientWidth;
             const areaHeight = canvasArea.clientHeight;
             
-            // Начальное появление карточек по центру
             const centerX = (areaWidth / 2) - 125 + ((canvasData.nodes.length % 5) * 25);
             const centerY = (areaHeight / 2) - 50 + ((canvasData.nodes.length % 5) * 25);
 
@@ -129,45 +138,62 @@
             div.style.left = nodeData.x + 'px';
             div.style.top = nodeData.y + 'px';
 
-            div.addEventListener('mousedown', function(e) {
-                // Игнорируем клики не левой кнопкой мыши
-                if (e.button !== 0) return; 
-                
+            // Единая функция для начала перетаскивания (работает и для мыши, и для тача)
+            function startDrag(e) {
+                // Если это мышь, игнорируем всё, кроме левой кнопки
+                if (e.type === 'mousedown' && e.button !== 0) return;
+
                 e.preventDefault();
                 div.style.borderColor = '#ffffff';
-                div.style.zIndex = 1000; // Поднимаем активную карточку наверх
+                div.style.zIndex = 1000;
 
                 let rect = canvasArea.getBoundingClientRect();
-                // Рассчитываем сдвиг курсора относительно левого верхнего угла карточки
-                let shiftX = e.clientX - div.getBoundingClientRect().left;
-                let shiftY = e.clientY - div.getBoundingClientRect().top;
+                
+                // Извлекаем координаты клика/касания в зависимости от устройства
+                let clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
 
-                function onMouseMove(e) {
-                    // Вычисляем новые координаты относительно рабочей зоны
-                    let newX = e.clientX - rect.left - shiftX;
-                    let newY = e.clientY - rect.top - shiftY;
+                let shiftX = clientX - div.getBoundingClientRect().left;
+                let shiftY = clientY - div.getBoundingClientRect().top;
+
+                function moveAt(currentX, currentY) {
+                    let newX = currentX - rect.left - shiftX;
+                    let newY = currentY - rect.top - shiftY;
                     
-                    // Применяем позицию без каких-либо ограничений
                     div.style.left = newX + 'px';
                     div.style.top = newY + 'px';
                     
-                    // Сохраняем точные данные для Obsidian
                     nodeData.x = Math.round(newX);
                     nodeData.y = Math.round(newY);
                 }
 
-                // Слушаем движение по ВСЕМУ экрану, чтобы карточка не «отрывалась»
-                window.addEventListener('mousemove', onMouseMove);
+                function onMove(moveEvent) {
+                    let curX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                    let curY = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientY : moveEvent.clientY;
+                    moveAt(curX, curY);
+                }
+
+                // Добавляем глобальные слушатели перемещения
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove, { passive: false });
                 
-                function onMouseUp() {
-                    window.removeEventListener('mousemove', onMouseMove);
-                    window.removeEventListener('mouseup', onMouseUp);
+                function endDrag() {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('touchmove', onMove);
+                    window.removeEventListener('mouseup', endDrag);
+                    window.removeEventListener('touchend', endDrag);
+                    
                     div.style.borderColor = '#555555';
-                    div.style.zIndex = ''; // Возвращаем стандартный слой
+                    div.style.zIndex = '';
                 }
                 
-                window.addEventListener('mouseup', onMouseUp);
-            });
+                window.addEventListener('mouseup', endDrag);
+                window.addEventListener('touchend', endDrag);
+            }
+
+            // Вешаем обработчики на оба типа ввода
+            div.addEventListener('mousedown', startDrag);
+            div.addEventListener('touchstart', startDrag, { passive: false });
 
             div.ondragstart = function() { return false; };
             canvasArea.appendChild(div);
@@ -183,7 +209,7 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = "free-research.canvas";
+            link.download = "universal-research.canvas";
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
