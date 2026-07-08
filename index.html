@@ -1,6 +1,129 @@
-<html>
+<html lang="ru">
 hello, world, this my site...
 
 <br>
 <a href="https://forgottenlanguages-full.forgottenlanguages.org"> Forgottenlanguages.org </a>
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Экспорт в Obsidian Canvas</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #1e1e1e; color: #fff; }
+        #controls { padding: 15px; background: #2a2a2a; border-bottom: 1px solid #3e3e3e; }
+        button, input { padding: 8px 12px; background: #4a4a4a; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #6a6a6a; }
+        #canvas-area { width: 100vw; height: calc(100vh - 70px); position: relative; overflow: hidden; background: #121212; }
+        .node { position: absolute; padding: 15px; background: #2a2a2a; border: 2px solid #4a4a4a; border-radius: 6px; min-width: 150px; cursor: move; }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <input type="text" id="node-text" placeholder="Текст заметки..." value="Новая мысль">
+        <button onclick="addNode()">Добавить карточку</button>
+        <button onclick="exportToObsidian()" style="background: #2b7a4b;">Сохранить в .canvas</button>
+    </div>
+
+    <div id="canvas-area"></div>
+
+    <script>
+        // Массив, где хранятся данные карточек по стандарту Obsidian JSON
+        let canvasData = {
+            nodes: [],
+            edges: []
+        };
+
+        let nodeIdCounter = 1;
+        const canvasArea = document.getElementById('canvas-area');
+
+        // Функция добавления новой карточки на экран
+        function addNode() {
+            const text = document.getElementById('node-text').value;
+            const id = "node_" + nodeIdCounter++;
+            
+            // Стандартные координаты и размеры для Obsidian
+            const nodeData = {
+                id: id,
+                type: "text",
+                text: text,
+                x: 100 + (canvasData.nodes.length * 50), // смещение, чтобы не накладывались
+                y: 100 + (canvasData.nodes.length * 30),
+                width: 250,
+                height: 100
+            };
+
+            canvasData.nodes.push(nodeData);
+            renderNode(nodeData);
+        }
+
+        // Отрисовка карточки в HTML и добавление возможности её перетаскивать
+        function renderNode(nodeData) {
+            const div = document.createElement('div');
+            div.className = 'node';
+            div.id = nodeData.id;
+            div.innerText = nodeData.text;
+            div.style.left = nodeData.x + 'px';
+            div.style.top = nodeData.y + 'px';
+            div.style.width = nodeData.width + 'px';
+            div.style.height = nodeData.height + 'px';
+
+            // Простая реализация Drag and Drop для демонстрации
+            div.onmousedown = function(e) {
+                let shiftX = e.clientX - div.getBoundingClientRect().left;
+                let shiftY = e.clientY - div.getBoundingClientRect().top;
+
+                function moveAt(clientX, clientY) {
+                    let newX = clientX - canvasArea.getBoundingClientRect().left - shiftX;
+                    let newY = clientY - canvasArea.getBoundingClientRect().top - shiftY;
+                    div.style.left = newX + 'px';
+                    div.style.top = newY + 'px';
+                    
+                    // Обновляем координаты в нашем JSON-объекте
+                    nodeData.x = newX;
+                    nodeData.y = newY;
+                }
+
+                function onMouseMove(e) { moveAt(e.clientX, e.clientY); }
+                document.addEventListener('mousemove', onMouseMove);
+                
+                document.onmouseup = function() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.onmouseup = null;
+                };
+            };
+
+            div.ondragstart = function() { return false; };
+            canvasArea.appendChild(div);
+        }
+
+        // Главная функция: сборка JSON и скачивание одной кнопкой
+        function exportToObsidian() {
+            if (canvasData.nodes.length === 0) {
+                alert("Сначала добавьте хотя бы одну карточку!");
+                return;
+            }
+
+            // Переводим объект в строку JSON
+            const jsonString = JSON.stringify(canvasData, null, 2);
+            
+            // Создаем виртуальный файл в памяти браузера
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            // Создаем скрытую ссылку для скачивания
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "my-research.canvas"; // Расширение обязательно .canvas
+            
+            // Имитируем клик для скачивания
+            document.body.appendChild(link);
+            link.click();
+            
+            // Удаляем временные элементы
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
 </html>
