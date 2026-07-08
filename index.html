@@ -1,54 +1,141 @@
-<html lang="ru">
-hello, world, this my site...
-
-<br>
-<a href="https://forgottenlanguages-full.forgottenlanguages.org"> Forgottenlanguages.org </a>
 <!DOCTYPE html>
-
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Экспорт в Obsidian Canvas</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #1e1e1e; color: #fff; }
-        #controls { padding: 15px; background: #2a2a2a; border-bottom: 1px solid #3e3e3e; }
-        button, input { padding: 8px 12px; background: #4a4a4a; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
-        button:hover { background: #6a6a6a; }
-        #canvas-area { width: 100vw; height: calc(100vh - 70px); position: relative; overflow: hidden; background: #121212; }
-        .node { position: absolute; padding: 15px; background: #2a2a2a; border: 2px solid #4a4a4a; border-radius: 6px; min-width: 150px; cursor: move; }
+        /* Базовые стили страницы */
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: #1a1a1a; /* Глубокий темно-серый фон */
+            color: #ededed; 
+            overflow: hidden; 
+        }
+        
+        /* Верхняя панель управления */
+        #controls { 
+            padding: 12px 20px; 
+            background: #242424; 
+            border-bottom: 2px solid #333333; 
+            display: flex; 
+            gap: 12px; 
+            align-items: center;
+            z-index: 10; 
+            position: relative; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        /* Поле ввода */
+        input { 
+            padding: 8px 12px; 
+            background: #1a1a1a; 
+            color: #ffffff; 
+            border: 2px solid #444444; 
+            border-radius: 4px; 
+            font-size: 14px;
+            width: 250px;
+        }
+        input:focus {
+            border-color: #666666;
+            outline: none;
+        }
+        
+        /* Кнопки */
+        button { 
+            padding: 8px 16px; 
+            background: #333333; 
+            color: #ffffff; 
+            border: 2px solid #444444; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        button:hover { 
+            background: #444444; 
+            border-color: #666666;
+        }
+        #btn-save {
+            background: #2e2e2e;
+            border-color: #555555;
+        }
+        #btn-save:hover {
+            background: #3a3a3a;
+            border-color: #777777;
+        }
+        
+        /* Рабочая область с контрастной сеткой */
+        #canvas-area { 
+            width: 100vw; 
+            height: calc(100vh - 68px); 
+            position: relative; 
+            background-color: #1a1a1a;
+            /* Контрастная серая сетка для ориентации в пространстве */
+            background-image: 
+                linear-gradient(to right, #262626 1px, transparent 1px),
+                linear-gradient(to bottom, #262626 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Карточки (Контрастный средне-серый цвет) */
+        .node { 
+            position: absolute; 
+            padding: 16px; 
+            background: #2e2e2e; /* Четко выделяется на фоне #1a1a1a */
+            border: 2px solid #555555; /* Контрастная рамка */
+            border-radius: 6px; 
+            color: #ffffff;
+            width: 250px; 
+            height: 100px; 
+            cursor: move; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.4;
+            user-select: none;
+        }
+        /* Подсветка карточки при наведении */
+        .node:hover {
+            border-color: #888888;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
     </style>
 </head>
 <body>
 
     <div id="controls">
-        <input type="text" id="node-text" placeholder="Текст заметки..." value="Новая мысль">
+        <input type="text" id="node-text" placeholder="Текст заметки..." value="Контрастная мысль">
         <button onclick="addNode()">Добавить карточку</button>
-        <button onclick="exportToObsidian()" style="background: #2b7a4b;">Сохранить в .canvas</button>
+        <button id="btn-save" onclick="exportToObsidian()">Сохранить в .canvas</button>
     </div>
 
     <div id="canvas-area"></div>
 
     <script>
-        // Массив, где хранятся данные карточек по стандарту Obsidian JSON
-        let canvasData = {
-            nodes: [],
-            edges: []
-        };
-
+        let canvasData = { nodes: [], edges: [] };
         let nodeIdCounter = 1;
         const canvasArea = document.getElementById('canvas-area');
 
-        // Функция добавления новой карточки на экран
         function addNode() {
             const text = document.getElementById('node-text').value;
             const id = "node_" + nodeIdCounter++;
             
-            // Стандартные координаты и размеры для Obsidian
+            const areaWidth = canvasArea.clientWidth;
+            const areaHeight = canvasArea.clientHeight;
+            
+            // Появление по центру со смещением для новых карточек
+            const centerX = (areaWidth / 2) - 125 + ((canvasData.nodes.length % 5) * 25);
+            const centerY = (areaHeight / 2) - 50 + ((canvasData.nodes.length % 5) * 25);
+
             const nodeData = {
                 id: id,
                 type: "text",
                 text: text,
-                x: 100 + (canvasData.nodes.length * 50), // смещение, чтобы не накладывались
-                y: 100 + (canvasData.nodes.length * 30),
+                x: Math.round(centerX),
+                y: Math.round(centerY),
                 width: 250,
                 height: 100
             };
@@ -57,7 +144,6 @@ hello, world, this my site...
             renderNode(nodeData);
         }
 
-        // Отрисовка карточки в HTML и добавление возможности её перетаскивать
         function renderNode(nodeData) {
             const div = document.createElement('div');
             div.className = 'node';
@@ -65,23 +151,25 @@ hello, world, this my site...
             div.innerText = nodeData.text;
             div.style.left = nodeData.x + 'px';
             div.style.top = nodeData.y + 'px';
-            div.style.width = nodeData.width + 'px';
-            div.style.height = nodeData.height + 'px';
 
-            // Простая реализация Drag and Drop для демонстрации
             div.onmousedown = function(e) {
+                e.preventDefault();
+                // Визуально выделяем перетаскиваемую карточку
+                div.style.borderColor = '#ffffff';
+                
+                let rect = canvasArea.getBoundingClientRect();
                 let shiftX = e.clientX - div.getBoundingClientRect().left;
                 let shiftY = e.clientY - div.getBoundingClientRect().top;
 
                 function moveAt(clientX, clientY) {
-                    let newX = clientX - canvasArea.getBoundingClientRect().left - shiftX;
-                    let newY = clientY - canvasArea.getBoundingClientRect().top - shiftY;
+                    let newX = clientX - rect.left - shiftX;
+                    let newY = clientY - rect.top - shiftY;
+                    
                     div.style.left = newX + 'px';
                     div.style.top = newY + 'px';
                     
-                    // Обновляем координаты в нашем JSON-объекте
-                    nodeData.x = newX;
-                    nodeData.y = newY;
+                    nodeData.x = Math.round(newX);
+                    nodeData.y = Math.round(newY);
                 }
 
                 function onMouseMove(e) { moveAt(e.clientX, e.clientY); }
@@ -89,6 +177,8 @@ hello, world, this my site...
                 
                 document.onmouseup = function() {
                     document.removeEventListener('mousemove', onMouseMove);
+                    // Возвращаем стандартную рамку после переноса
+                    div.style.borderColor = '#555555';
                     document.onmouseup = null;
                 };
             };
@@ -97,30 +187,19 @@ hello, world, this my site...
             canvasArea.appendChild(div);
         }
 
-        // Главная функция: сборка JSON и скачивание одной кнопкой
         function exportToObsidian() {
             if (canvasData.nodes.length === 0) {
-                alert("Сначала добавьте хотя бы одну карточку!");
+                alert("Добавьте хотя бы одну карточку!");
                 return;
             }
-
-            // Переводим объект в строку JSON
             const jsonString = JSON.stringify(canvasData, null, 2);
-            
-            // Создаем виртуальный файл в памяти браузера
             const blob = new Blob([jsonString], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            
-            // Создаем скрытую ссылку для скачивания
             const link = document.createElement("a");
             link.href = url;
-            link.download = "my-research.canvas"; // Расширение обязательно .canvas
-            
-            // Имитируем клик для скачивания
+            link.download = "gray-research.canvas";
             document.body.appendChild(link);
             link.click();
-            
-            // Удаляем временные элементы
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
