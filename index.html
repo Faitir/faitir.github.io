@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script src="trees-data.js"></script><script src="app.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Деревья Minecraft — коллекция</title>
@@ -192,5 +191,69 @@
     <footer>
         Сделано с ❤ для майнкрафтеров
     </footer>
+
+    <script>
+        // === ДОБАВЛЯЙ НОВЫЕ ДЕРЕВЬЯ СЮДА ===
+        const trees = [
+            {
+                name: "Дуб",
+                nameEn: "Oak",
+                mod: "Vanilla",
+                description: "Классическое дерево Minecraft. Встречается почти во всех биомах и является основой крафта в игре. С дуба можно получить яблоко — редкий, но полезный дроп.",
+                image: "https://minecraft.wiki/images/Oak_Log_JE5_BE3.png",
+                stats: {
+                    "Высота": "4–10 блоков",
+                    "Биомы": "Почти все",
+                    "Листва": "Дубовая",
+                    "Редкость": "Обычное"
+                },
+                drops: ["Дубовые брёвна", "Дубовая листва", "Саженец дуба", "Палки", "Яблоко (редко)"]
+            }
+            // Пример добавления следующего дерева:
+            // {
+            //     name: "Берёза",
+            //     nameEn: "Birch",
+            //     mod: "Vanilla",
+            //     description: "...",
+            //     image: "https://minecraft.wiki/images/Birch_Log_JE4_BE3.png",
+            //     stats: { "Высота": "5–7 блоков", "Биомы": "Лес, Берёзовый лес" },
+            //     drops: ["Берёзовые брёвна", "Саженец берёзы"]
+            // }
+        ];
+
+        const container = document.getElementById('cards-container');
+
+        trees.forEach(tree => {
+            const statsHtml = Object.entries(tree.stats).map(([k, v]) => `
+                <div class="stat">
+                    <div class="stat-label">${k}</div>
+                    <div class="stat-value">${v}</div>
+                </div>
+            `).join('');
+
+            const dropsHtml = tree.drops.map(d => `<span class="drop-item">${d}</span>`).join('');
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="tree-preview">
+                        <img src="${tree.image}" alt="${tree.name}" onerror="this.style.display='none'">
+                    </div>
+                    <div>
+                        <div class="card-title">${tree.name}</div>
+                        <span class="mod-badge">${tree.mod}</span>
+                    </div>
+                </div>
+                <p class="card-description">${tree.description}</p>
+                <div class="stats">${statsHtml}</div>
+                <div class="drops">
+                    <div class="drops-title">Дроп</div>
+                    <div class="drops-list">${dropsHtml}</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    </script>
 </body>
 </html>
