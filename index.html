@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <script src="trees-data.js"></script><script src="app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Деревья Minecraft — коллекция</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'VT323', monospace;
+            background:
+                linear-gradient(rgba(20, 30, 20, 0.92), rgba(10, 15, 10, 0.95)),
+                repeating-linear-gradient(0deg, #1a2a1a 0, #1a2a1a 16px, #152415 16px, #152415 32px);
+            color: #e8e8d0;
+            min-height: 100vh;
+            padding: 20px;
+            image-rendering: pixelated;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 4px solid #5a7a3a;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 28px;
+            color: #8bc34a;
+            text-shadow: 3px 3px 0 #2d4a1a, 6px 6px 0 rgba(0,0,0,0.4);
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 22px;
+            color: #b8b89a;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #2a3a2a;
+            border: 4px solid #5a7a3a;
+            box-shadow:
+                inset 0 0 0 2px #1a2a1a,
+                0 6px 0 #1a2a1a,
+                0 10px 20px rgba(0,0,0,0.5);
+            padding: 20px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                inset 0 0 0 2px #1a2a1a,
+                0 10px 0 #1a2a1a,
+                0 16px 30px rgba(0,0,0,0.6);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px dashed #5a7a3a;
+        }
+
+        .tree-preview {
+            width: 80px;
+            height: 80px;
+            background: #1a2a1a;
+            border: 3px solid #3a5a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tree-preview img {
+            width: 64px;
+            height: 64px;
+            image-rendering: pixelated;
+        }
+
+        .card-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            color: #c8e6a0;
+            margin-bottom: 6px;
+        }
+
+        .mod-badge {
+            display: inline-block;
+            background: #5a7a3a;
+            color: #1a2a1a;
+            padding: 3px 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .card-description {
+            font-size: 20px;
+            line-height: 1.3;
+            color: #d0d0b0;
+            margin-bottom: 16px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat {
+            background: #1a2a1a;
+            padding: 8px 10px;
+            border-left: 3px solid #8bc34a;
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: #8a8a70;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 19px;
+            color: #e8e8d0;
+        }
+
+        .drops {
+            background: #1a2a1a;
+            padding: 12px;
+        }
+
+        .drops-title {
+            font-size: 16px;
+            color: #8bc34a;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .drops-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .drop-item {
+            background: #2a3a2a;
+            border: 2px solid #3a5a2a;
+            padding: 4px 8px;
+            font-size: 17px;
+            color: #c8e6a0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 20px;
+            color: #6a7a5a;
+            font-size: 18px;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 20px; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌳 Деревья Minecraft</h1>
+        <p>Коллекция деревьев из ванилы и модов</p>
+    </header>
+
+    <div class="grid" id="cards-container"></div>
+
+    <footer>
+        Сделано с ❤ для майнкрафтеров
+    </footer>
+</body>
+</html>
