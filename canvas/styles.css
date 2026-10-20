@@ -1,0 +1,307 @@
+/* === Базовые стили и сброс === */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #025746;
+    color: #e6fff9;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* === Контейнер === */
+.container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* === Холст на весь экран === */
+.cards-container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #025746;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+    background-size: 24px 24px;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.cards-container.panning {
+    cursor: grabbing !important;
+}
+
+.canvas-world {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* === Заголовок === */
+header {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    margin: 0;
+    text-align: center;
+    pointer-events: none;
+}
+
+h1 {
+    font-size: 1.5rem;
+    color: #e6fff9;
+    background: rgba(2, 87, 70, 0.75);
+    backdrop-filter: blur(6px);
+    padding: 6px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* === Панель с кнопками === */
+.controls {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    gap: 12px;
+    background: rgba(2, 87, 70, 0.75);
+    backdrop-filter: blur(6px);
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* === Кнопки === */
+.btn {
+    padding: 10px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #e6fff9;
+}
+
+.btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-primary {
+    background-color: #34d399;
+    color: #022c22;
+    border-color: #34d399;
+}
+
+.btn-primary:hover {
+    background-color: #4ade80;
+    border-color: #4ade80;
+}
+
+/* === Карточки === */
+.card {
+    position: absolute;
+    width: 250px;
+    background: #047857;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease;
+    cursor: grab;
+
+    /* ВАЖНО: overflow: hidden здесь больше не нужен */
+}
+
+.card.selected {
+    z-index: 50;
+    border-color: #34d399;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+}
+
+.card.resizing {
+    z-index: 60;
+}
+
+.card:active {
+    cursor: grabbing;
+}
+
+.card.dragging {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    opacity: 0.95;
+    user-select: none;
+}
+
+.card.dragging * {
+    pointer-events: none;
+    user-select: none;
+}
+
+.card.will-change {
+    will-change: transform;
+}
+
+/* Активное состояние карточки */
+.card.selected {
+    border-color: #34d399;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+}
+
+/* Текст карточки */
+.card-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 14px;
+    color: #e6fff9;
+    font-size: 0.9rem;
+    outline: none;
+    white-space: pre-wrap;
+    cursor: text;
+    border-radius: 8px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(230, 255, 249, 0.28) transparent;
+}
+
+.card-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.card-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.card-content::-webkit-scrollbar-thumb {
+    background: rgba(230, 255, 249, 0.28);
+    border-radius: 999px;
+}
+
+.card-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(230, 255, 249, 0.45);
+}
+
+.card-content:focus {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.card-content::selection,
+.card-content *::selection {
+    background: rgba(52, 211, 153, 0.35);
+    color: #e6fff9;
+}
+
+.card-content:empty::before {
+    content: "Введите текст...";
+    color: rgba(230, 255, 249, 0.4);
+    font-style: italic;
+}
+
+/* Панель действий карточки */
+.card-actions {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.btn-small {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
+.btn-danger {
+    background-color: rgba(127, 29, 29, 0.6);
+    color: #fca5a5;
+    border-color: rgba(252, 165, 165, 0.3);
+}
+
+.btn-danger:hover {
+    background-color: rgba(127, 29, 29, 0.9);
+    border-color: rgba(252, 165, 165, 0.5);
+}
+
+/* === Ручки изменения размера === */
+.resize-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #34d399;
+    border: 2px solid #022c22;
+    border-radius: 50%;
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.card.selected .resize-handle {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.resize-handle.top-left {
+    top: -7px;
+    left: -7px;
+    cursor: nwse-resize;
+}
+
+.resize-handle.top-right {
+    top: -7px;
+    right: -7px;
+    cursor: nesw-resize;
+}
+
+.resize-handle.bottom-left {
+    bottom: -7px;
+    left: -7px;
+    cursor: nesw-resize;
+}
+
+.resize-handle.bottom-right {
+    bottom: -7px;
+    right: -7px;
+    cursor: nwse-resize;
+}
+
+.resize-handle:hover {
+    background: #4ade80;
+    transform: scale(1.15);
+}
+
+/* === Пустое состояние === */
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(230, 255, 249, 0.4);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
